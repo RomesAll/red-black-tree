@@ -38,3 +38,18 @@ def test_insert_node_in_rbt():
     assert root.right.left.key == 5
     assert root.right.right.key == 7
     assert root.right.right.right.key == 8
+
+
+def test_delete_node_from_rbt():
+    """Тест: проверка удаления узла в RedBlackTree."""
+    tree = RedBlackTree()
+    tree.insert(key=5, value='5')
+    tree.insert(key=3, value='3')
+    tree.insert(key=4, value='4')
+    tree.insert(key=6, value='6')
+    tree.insert(key=7, value='7')
+    tree.insert(key=8, value='8')
+    tree.delete(key=6)
+    root = tree.root
+    assert root.key == 4
+    assert root.right.key == 7
