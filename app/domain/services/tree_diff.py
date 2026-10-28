@@ -1,6 +1,6 @@
 from app.domain.models.node import Node
 from app.domain.models.rbt_tree import RedBlackTree
-from app.domain.value_objects import TreeDifference
+from app.domain.models.value_objects import TreeDifference
 
 
 class TreeDiffService:
