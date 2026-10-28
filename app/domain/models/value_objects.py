@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass(frozen=True)
 class TreeDifference:
     """Объект, описывающий разницу между двумя деревьями."""
