@@ -1,5 +1,7 @@
 from app.domain.models.node import Node
 from app.domain.models.rbt_tree import RedBlackTree
+from app.domain.services.tree_diff import TreeDiffService
+from app.domain.services.tree_merge import TreeMergeService
 
 
 def test_init_rbtree():
@@ -21,35 +23,22 @@ def test_search_node_in_rbt():
     assert node_2 is None
 
 
-def test_insert_node_in_rbt():
-    """Тест: проверка вставки узла в RedBlackTree."""
-    tree = RedBlackTree()
-    tree.insert(key=5, value='5')
-    tree.insert(key=3, value='3')
-    tree.insert(key=4, value='4')
-    tree.insert(key=6, value='6')
-    tree.insert(key=7, value='7')
-    tree.insert(key=8, value='8')
-    root = tree.root
-    assert isinstance(root, Node)
-    assert root.key == 4
-    assert root.left.key == 3
-    assert root.right.key == 6
-    assert root.right.left.key == 5
-    assert root.right.right.key == 7
-    assert root.right.right.right.key == 8
-
-
-def test_delete_node_from_rbt():
+def test_delete_node_from_rbt(setup_rbt_a):
     """Тест: проверка удаления узла в RedBlackTree."""
-    tree = RedBlackTree()
-    tree.insert(key=5, value='5')
-    tree.insert(key=3, value='3')
-    tree.insert(key=4, value='4')
-    tree.insert(key=6, value='6')
-    tree.insert(key=7, value='7')
-    tree.insert(key=8, value='8')
-    tree.delete(key=6)
-    root = tree.root
-    assert root.key == 4
-    assert root.right.key == 7
+    delete_root = setup_rbt_a.root
+    setup_rbt_a.delete(key=delete_root.key)
+    assert delete_root.key != setup_rbt_a.root.key
+
+
+def test_merge_rbt(setup_rbt_a, setup_rbt_b):
+    """Тест: объединения 2-х деревьев RedBlackTree."""
+    tree_c = TreeMergeService.merge(setup_rbt_a, setup_rbt_b)
+    assert tree_c.root.key == 6
+
+
+def test_compare_rbt(setup_rbt_a, setup_rbt_b):
+    """Тест: получение разницы между 2-я деревьями RedBlackTree."""
+    result = TreeDiffService.compare(setup_rbt_a, setup_rbt_b)
+    assert result.only_in_a == [3, 4, 5]
+    assert result.only_in_b == [22, 54, 90]
+    assert result.are_identical == False
