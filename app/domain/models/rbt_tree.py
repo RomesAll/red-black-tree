@@ -1,4 +1,5 @@
 from typing import Any
+from app.domain.events import NodeLeftRotatedEvent, NodeInsertedEvent, NodeDeletedEvent, NodeColorChangedEvent
 from app.domain.models.node import Node, NodeColor
 from app.domain.exceptions import DuplicateKeyError
 
@@ -7,13 +8,32 @@ class RedBlackTree:
     """Агрегат: Красно-черное дерево."""
 
     def __init__(self):
+        self._domain_events: list = []
         self.root: Node | None = None
         self.size: int = 0
+
+    @property
+    def domain_event(self):
+        return self._domain_events.copy()
+
+    def clear_events(self):
+        """Очистить события"""
+        self._domain_events.clear()
+
+    def add_event(self, event: Any):
+        """Добавить событие"""
+        self._domain_events.append(event)
 
     def _change_color(self, node: Node, new_color: NodeColor):
         """Метод смены цвета"""
         if node.color != new_color:
             node.color = new_color
+            self.add_event(
+                NodeColorChangedEvent(
+                    key=node.key,
+                    new_color=new_color.value
+                )
+            )
 
     def search(self, key: Any) -> Node | None:
         """Поиск узла по ключу. Возвращает либо None, либо Node"""
@@ -42,6 +62,13 @@ class RedBlackTree:
         self._insert(node)
         self._fix_insert(node)
         self.size += 1
+        self.add_event(
+            NodeInsertedEvent(
+                key=key,
+                value=value,
+                color=node.color.value
+            )
+        )
 
     def _insert(self, node: Node):
         """Вставка узла как в бинарном дереве поиска."""
@@ -116,6 +143,14 @@ class RedBlackTree:
         y.left = x
         x.parent = y
 
+        self.add_event(
+            NodeLeftRotatedEvent(
+                key=x.key,
+                new_root_key=y.key,
+                parent_key=y.parent.key if y.parent else None
+            )
+        )
+
     def _right_rotate(self, x: Node):
         """Правый поворот дерева."""
         y = x.left
@@ -133,11 +168,20 @@ class RedBlackTree:
         y.right = x
         x.parent = y
 
+        self.add_event(
+            NodeRightRotatedEvent(
+                key=x.key,
+                new_root_key=y.key,
+                parent_key=y.parent.key if y.parent else None
+            )
+        )
+
     def delete(self, key: Any):
         """Удаление узла по ключу."""
         node_to_delete = self.search(key)
         if node_to_delete is None:
             return
+        self.domain_events.append(NodeDeletedEvent(key=key))
         self._delete_node(node_to_delete)
         self.size -= 1
 
