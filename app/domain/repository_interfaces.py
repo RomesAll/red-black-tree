@@ -7,14 +7,14 @@ class ITreeRepository(Protocol):
     Интерфейс-протокол репозитория для управления агрегатом RedBlackTree
     """
 
-    def get_by_id(self, tree_id: Any) -> RedBlackTree | None:
+    async def get_by_id(self, tree_id: Any) -> RedBlackTree | None:
         """Получить агрегата по id"""
         pass
 
-    def save(self, tree_id: Any, tree: RedBlackTree) -> None:
+    async def save(self, tree: RedBlackTree) -> None:
         """Сохранить новый агрегат по id"""
         pass
 
-    def delete(self, tree_id: Any) -> None:
+    async def delete(self, tree_id: Any) -> None:
         """Удалить агрегат по id"""
         pass
