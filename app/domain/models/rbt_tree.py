@@ -1,5 +1,9 @@
+from collections import deque
 from typing import Any
-from app.domain.events import NodeLeftRotatedEvent, NodeInsertedEvent, NodeDeletedEvent, NodeColorChangedEvent
+from uuid import UUID
+from app.domain import Node
+from app.domain.events import NodeLeftRotatedEvent, NodeInsertedEvent, NodeDeletedEvent, NodeColorChangedEvent, \
+    NodeRightRotatedEvent
 from app.domain.models.node import Node, NodeColor
 from app.domain.exceptions import DuplicateKeyError
 
@@ -7,7 +11,8 @@ from app.domain.exceptions import DuplicateKeyError
 class RedBlackTree:
     """Агрегат: Красно-черное дерево."""
 
-    def __init__(self):
+    def __init__(self, tree_id: UUID):
+        self.tree_id = tree_id
         self._domain_events: list = []
         self.root: Node | None = None
         self.size: int = 0
@@ -30,6 +35,7 @@ class RedBlackTree:
             node.color = new_color
             self.add_event(
                 NodeColorChangedEvent(
+                    tree_id=self.tree_id,
                     key=node.key,
                     new_color=new_color.value
                 )
@@ -64,6 +70,7 @@ class RedBlackTree:
         self.size += 1
         self.add_event(
             NodeInsertedEvent(
+                tree_id=self.tree_id,
                 key=key,
                 value=value,
                 color=node.color.value
@@ -145,6 +152,7 @@ class RedBlackTree:
 
         self.add_event(
             NodeLeftRotatedEvent(
+                tree_id=self.tree_id,
                 key=x.key,
                 new_root_key=y.key,
                 parent_key=y.parent.key if y.parent else None
@@ -170,6 +178,7 @@ class RedBlackTree:
 
         self.add_event(
             NodeRightRotatedEvent(
+                tree_id=self.tree_id,
                 key=x.key,
                 new_root_key=y.key,
                 parent_key=y.parent.key if y.parent else None
@@ -181,7 +190,7 @@ class RedBlackTree:
         node_to_delete = self.search(key)
         if node_to_delete is None:
             return
-        self.domain_events.append(NodeDeletedEvent(key=key))
+        self.add_event(NodeDeletedEvent(tree_id=self.tree_id, key=key))
         self._delete_node(node_to_delete)
         self.size -= 1
 
@@ -295,3 +304,47 @@ class RedBlackTree:
                             self._right_rotate(x.parent)
                         x = self.root
         self._change_color(x, NodeColor.BLACK)
+
+    def to_dict(self) -> dict | None:
+        """Преобразовать агрегат в python словарь для передачи."""
+        if self.root is None:
+            return None
+
+        # Результирующий словарь с вложенными объектами
+        result = {
+            'key': self.root.key,
+            'value': self.root.value,
+            'color': self.root.color.value,
+            'left': None,
+            'right': None
+        }
+
+        # Очередь для перебора дерева в ширину
+        queue_dfs = deque([(self.root, result)])
+
+        while queue_dfs:
+            node, current_res_dict = queue_dfs.popleft()
+
+            if node.left:
+                child_left = {
+                    'key': self.node.key,
+                    'value': self.node.value,
+                    'color': self.node.color.value,
+                    'left': None,
+                    'right': None
+                }
+                current_res_dict['left'] = child_left
+                queue_dfs.append((node.left, current_res_dict['left']))
+
+            if node.right:
+                child_right = {
+                    'key': self.node.key,
+                    'value': self.node.value,
+                    'color': self.node.color.value,
+                    'left': None,
+                    'right': None
+                }
+                current_res_dict['right'] = child_right
+                queue_dfs.append((node.right, current_res_dict['right']))
+
+        return result
