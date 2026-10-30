@@ -42,3 +42,12 @@ def test_compare_rbt(setup_rbt_a, setup_rbt_b):
     assert result.only_in_a == [3, 4, 5]
     assert result.only_in_b == [22, 54, 90]
     assert result.are_identical == False
+
+
+def test_tree_dfs_iter(setup_rbt_a):
+    """Тест: получение узлов дерева по запросу через генератор."""
+    count = 0
+    for node in setup_rbt_a.iterative_dfs():
+        count += 1
+        assert isinstance(node, Node)
+    assert count == setup_rbt_a.size
