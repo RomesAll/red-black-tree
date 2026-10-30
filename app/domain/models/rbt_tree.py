@@ -29,6 +29,9 @@ class RedBlackTree:
 
     def iterative_dfs(self) -> Generator:
         """Генератор итеративного обхода дерева в глубину."""
+        if self.root is None:
+            return
+
         queue = deque([self.root])
 
         while queue:
