@@ -57,6 +57,20 @@ class SQLAlchemyTreeRepo:
         )
         await self._session.execute(stmt)
 
+    async def save(self, tree: RedBlackTree) -> None:
+        """Сохранить дерево или обновить измененные узлы"""
+        stmt = (
+            select(TreeOrm)
+            .where(TreeOrm.id == tree.tree_id)
+            .options(selectinload(TreeOrm.nodes))
+        )
+        db_tree = (await self._session.execute(stmt)).scalar_one_or_none()
+
+        if db_tree is None:
+            await self._save_new_tree(tree)
+        else:
+            await self._update_tree(tree, db_tree)
+
     @staticmethod
     def _is_structure_changed(domain_node: Node, orm_node: NodeOrm) -> bool:
         """
