@@ -3,7 +3,7 @@
 Веб-приложение для визуализации Красно-Черного дерева (Red-Black Tree) в реальном времени. 
 Проект написан с использованием принципов **Чистой Архитектуры (Clean Architecture)** и **Domain-Driven Design (DDD)**.
 
-## Демонстрация
+## Видео демонстрация (хостинг streamable)
 [![Демонстрация работы Red-Black Tree](docs/icon.png)](https://streamable.com/apcooq)
 
 ## Краткое описание
