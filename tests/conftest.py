@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from app.domain.models.rbt_tree import RedBlackTree
 
@@ -5,7 +7,7 @@ from app.domain.models.rbt_tree import RedBlackTree
 @pytest.fixture(scope='function')
 def setup_rbt_a() -> RedBlackTree:
     """Фикстура для получения красно-черного дерева с узлами."""
-    tree = RedBlackTree()
+    tree = RedBlackTree(tree_id=uuid4())
     tree.insert(key=5, value='5')
     tree.insert(key=3, value='3')
     tree.insert(key=4, value='4')
@@ -18,7 +20,7 @@ def setup_rbt_a() -> RedBlackTree:
 @pytest.fixture(scope='function')
 def setup_rbt_b() -> RedBlackTree:
     """Фикстура для получения красно-черного дерева с узлами."""
-    tree = RedBlackTree()
+    tree = RedBlackTree(tree_id=uuid4())
     tree.insert(key=54, value='54')
     tree.insert(key=90, value='90')
     tree.insert(key=22, value='22')

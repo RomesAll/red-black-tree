@@ -1,3 +1,4 @@
+from uuid import uuid4
 from app.domain.models.node import Node
 from app.domain.models.rbt_tree import RedBlackTree
 from app.domain.services.tree_diff import TreeDiffService
@@ -6,14 +7,14 @@ from app.domain.services.tree_merge import TreeMergeService
 
 def test_init_rbtree():
     """Тест: проверка инициализации агрегата RedBlackTree."""
-    tree = RedBlackTree()
+    tree = RedBlackTree(tree_id=uuid4())
     assert tree.size == 0
     assert tree.root is None
 
 
 def test_search_node_in_rbt():
     """Тест: проверка поиска узлов в RedBlackTree."""
-    tree = RedBlackTree()
+    tree = RedBlackTree(tree_id=uuid4())
     tree.insert(key=1, value='1')
     node_1 = tree.search(key=1)
     node_2 = tree.search(key=2)
