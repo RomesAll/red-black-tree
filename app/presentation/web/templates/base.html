@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Красно-черное дерево{% endblock %}</title>
+
+    <!-- Основные стили -->
+    <link rel="stylesheet" href="/static/style.css">
+
+    <!-- Дополнительные стили (если нужны на конкретной странице) -->
+    {% block head %}{% endblock %}
+
+    <!-- Стили для модального окна -->
+    <style>
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(3px);
+        }
+        .modal-overlay.active {
+            display: flex;
+        }
+        .modal-content {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            position: relative;
+            animation: slideDown 0.3s ease-out;
+        }
+        @keyframes slideDown {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-close {
+            position: absolute;
+            top: 15px; right: 15px;
+            background: none; border: none;
+            font-size: 1.5rem; color: #999;
+            cursor: pointer; padding: 0;
+        }
+        .modal-close:hover { color: #333; }
+
+        .history-list {
+            list-style: none; padding: 0; margin-top: 1rem;
+            max-height: 200px; overflow-y: auto;
+            border-top: 1px solid #eee;
+        }
+        .history-list li {
+            padding: 10px 5px;
+            border-bottom: 1px solid #f5f5f5;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .history-list a {
+            color: #3498db; text-decoration: none; font-family: monospace;
+            font-size: 0.9rem;
+        }
+        .history-list a:hover { text-decoration: underline; }
+        .history-list span { font-size: 0.8rem; color: #999; }
+    </style>
+</head>
+<body>
+    <header class="main-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <a href="/">Красно-черное дерево</a>
+        <button id="open-search-btn" style="background: #e0f2fe; color: #0369a1; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-weight: bold;">
+            🔍 Поиск дерева
+        </button>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Модальное окно поиска -->
+    <div class="modal-overlay" id="search-modal">
+        <div class="modal-content">
+            <button class="modal-close" id="close-search-btn">&times;</button>
+            <h3 style="margin-top: 0;">Найти дерево по ID</h3>
+
+            <div style="display: flex; gap: 10px; margin-bottom: 1rem;">
+                <input type="text" id="search-input" placeholder="Вставьте UUID дерева..." style="flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-family: monospace;">
+                <button id="search-go-btn" class="btn-primary" style="padding: 10px 20px;">Перейти</button>
+            </div>
+
+            <h4 style="margin-bottom: 0.5rem; color: #666; font-size: 0.9rem; text-transform: uppercase;">Недавние</h4>
+            <ul class="history-list" id="history-list">
+                <!-- Сюда JS добавит историю -->
+            </ul>
+        </div>
+    </div>
+
+    <!-- Скрипты конкретной страницы -->
+    {% block scripts %}{% endblock %}
+
+    <!-- Логика модального окна и истории (глобальная) -->
+    <script>
+        const modal = document.getElementById('search-modal');
+        const openBtn = document.getElementById('open-search-btn');
+        const closeBtn = document.getElementById('close-search-btn');
+        const searchGoBtn = document.getElementById('search-go-btn');
+        const searchInput = document.getElementById('search-input');
+        const historyList = document.getElementById('history-list');
+
+        // Открытие/закрытие
+        openBtn.addEventListener('click', () => {
+            modal.classList.add('active');
+            searchInput.focus();
+            renderHistory();
+        });
+
+        closeBtn.addEventListener('click', () => {
+            modal.classList.remove('active');
+        });
+
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) modal.classList.remove('active');
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') modal.classList.remove('active');
+        });
+
+        // Переход по кнопке
+        function goToTree() {
+            const id = searchInput.value.trim();
+            if (id) window.location.href = `/view/${id}`;
+        }
+        searchGoBtn.addEventListener('click', goToTree);
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') goToTree();
+        });
+
+        // --- ИСТОРИЯ ---
+        window.saveToHistory = function(treeId) {
+            let history = JSON.parse(localStorage.getItem('tree_history') || '[]');
+            history = history.filter(id => id !== treeId);
+            history.unshift(treeId);
+            history = history.slice(0, 5);
+            localStorage.setItem('tree_history', JSON.stringify(history));
+        };
+
+        function renderHistory() {
+            const history = JSON.parse(localStorage.getItem('tree_history') || '[]');
+            historyList.innerHTML = '';
+
+            if (history.length === 0) {
+                historyList.innerHTML = '<li style="color: #999; justify-content: center;">История пуста</li>';
+                return;
+            }
+
+            history.forEach(id => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <a href="/view/${id}">${id}</a>
+                    <span>недавно</span>
+                `;
+                historyList.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>

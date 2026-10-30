@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Создать дерево{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h2>Создать новое дерево</h2>
+    
+    <div class="form-group">
+        <label for="tree-data">Начальные данные (JSON-массив пар [ключ, значение]):</label>
+        <textarea id="tree-data" rows="5" placeholder='[[10, "A"], [5, "B"], [15, "C"]]'></textarea>
+        <small>Оставьте пустым, чтобы создать пустое дерево.</small>
+    </div>
+
+    <div class="form-group" style="display: flex; align-items: center; gap: 10px;">
+        <input type="checkbox" id="realtime-flag" disabled style="width: 20px; height: 20px; margin: 0;">
+        <label for="realtime-flag" style="margin: 0; font-weight: bold; color: #666;">Стриминг (Realtime)</label>
+    </div>
+
+    <button id="create-btn" class="btn-primary" style="width: 100%;">Создать дерево</button>
+    <div id="status-message" class="error-msg"></div>
+</div>
+
+<script>
+const dataInput = document.getElementById('tree-data');
+const realtimeFlag = document.getElementById('realtime-flag');
+
+// Включаем галочку стриминга, если введены данные
+dataInput.addEventListener('input', () => {
+    const hasData = dataInput.value.trim().length > 0;
+    realtimeFlag.disabled = !hasData;
+    realtimeFlag.checked = hasData;
+});
+
+document.getElementById('create-btn').addEventListener('click', async () => {
+    const rawInput = dataInput.value.trim();
+    let initialData = [];
+
+    if (rawInput) {
+        try { initialData = JSON.parse(rawInput); }
+        catch (e) { alert("Ошибка в JSON формате!"); return; }
+    }
+
+    const isRealtime = realtimeFlag.checked && initialData.length > 0;
+    const statusDiv = document.getElementById('status-message');
+
+    statusDiv.innerText = "Создание...";
+    statusDiv.style.color = "blue";
+
+    try {
+        // Создаем пустое дерево
+        const response = await fetch('/trees/', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ initial_data: initialData })
+        });
+
+        if (!response.ok) throw new Error("Ошибка при создании");
+        const result = await response.json();
+        const treeId = result.tree_id;
+
+        // Сохраняем ID в историю (вызываем функцию из base.html)
+        if (window.saveToHistory) {
+            window.saveToHistory(treeId);
+        }
+
+        if (isRealtime) {
+            localStorage.setItem('stream_data', JSON.stringify(initialData));
+            window.location.href = `/view/${treeId}?stream=true`;
+        } else {
+            window.location.href = `/view/${treeId}`;
+        }
+
+    } catch (error) {
+        statusDiv.innerText = "Ошибка: " + error.message;
+        statusDiv.style.color = "red";
+    }
+});
+</script>
+{% endblock %}
