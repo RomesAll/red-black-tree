@@ -1,3 +1,4 @@
+from uuid import uuid4
 from app.domain.exceptions import DuplicateKeyError
 from app.domain.models.node import Node
 from app.domain.models.rbt_tree import RedBlackTree
@@ -9,7 +10,7 @@ class TreeMergeService:
     @classmethod
     def merge(cls, tree_a: RedBlackTree, tree_b: RedBlackTree) -> RedBlackTree:
         """Объединить два независимых дерева."""
-        tree_c = RedBlackTree()
+        tree_c = RedBlackTree(tree_id=uuid4())
         # Вставить узлы из первого дерева в новое
         cls._merge(tree_a.root, tree_c)
         # Вставить узлы из второго дерева в новое
