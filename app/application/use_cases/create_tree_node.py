@@ -1,8 +1,11 @@
+import logging
 from typing import Callable, Any
 from uuid import UUID
 from app.application.event_bus import EventRegistry
 from app.application.interfaces import IUnitOfWork
 from app.domain import TreeNotFoundError
+
+logger = logging.getLogger()
 
 
 class CreateNodeUseCase:
@@ -13,10 +16,13 @@ class CreateNodeUseCase:
         self._event_registry = event_registry
 
     async def execute(self, tree_id: UUID, key: int, value: Any):
+        logger.info('CreateNodeUseCase: попытка вставить узел key=%s в дерево %s', key, tree_id)
+
         async with self._uow() as uow:
             # Получение дерева из хранилища
             tree = await uow.tree_repo.get_by_id(tree_id)
             if not tree:
+                logger.warning('CreateNodeUseCase: дерево %s не найдено', tree_id)
                 raise TreeNotFoundError(tree_id)
 
             # Вставка нового узла
@@ -32,3 +38,5 @@ class CreateNodeUseCase:
         # Обработка доменных событий
         for event in events:
             await self._event_registry.dispatch(event)
+
+        logger.info('CreateNodeUseCase: узел key=%s успешно добавлен в дерево %s', key, tree_id)
