@@ -1,6 +1,7 @@
 from typing import Callable
 from uuid import UUID
 from app.application.interfaces import IUnitOfWork
+from app.domain import TreeNotFoundError
 
 
 class GetTreeUseCase:
@@ -14,11 +15,10 @@ class GetTreeUseCase:
         async with self._uow() as uow:
             tree = await uow.tree_repo.get_by_id(tree_id)
             if not tree:
-                raise Exception
+                raise TreeNotFoundError(tree_id)
 
-        # Маппинг из объекта RedBlackTree -> dict
         return {
             'tree_id': tree.tree_id,
             'size': tree.size,
-            'nodes': tree.to_dict()
+            'root': tree.to_dict()
         }
