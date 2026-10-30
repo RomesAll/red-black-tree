@@ -1,3 +1,4 @@
+import logging
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete
@@ -5,6 +6,9 @@ from sqlalchemy.orm import selectinload
 from app.domain import RedBlackTree, Node, NodeColor
 from app.domain.models import node
 from app.infrastructure.db.models import TreeOrm, NodeOrm
+import logging
+
+logger = logging.getLogger()
 
 
 class SQLAlchemyTreeRepo:
@@ -15,6 +19,7 @@ class SQLAlchemyTreeRepo:
 
     async def get_by_id(self, tree_id: UUID) -> RedBlackTree | None:
         """Получить дерево и узлы из бд и сформировать агрегат RedBlackTree"""
+        logger.debug('DB: запрос дерева %s из базы', tree_id)
         stmt = (
             select(TreeOrm)
             .where(TreeOrm.id == tree_id)
@@ -23,6 +28,7 @@ class SQLAlchemyTreeRepo:
         db_tree = (await self._session.execute(stmt)).scalar_one_or_none()
 
         if db_tree is None:
+            logger.info('DB: дерево %s не найдено в базе', tree_id)
             return None
 
         root_node: Node | None = None
@@ -47,10 +53,12 @@ class SQLAlchemyTreeRepo:
         tree = RedBlackTree(tree_id=tree_id)
         tree.root = root_node
 
+        logger.debug('DB: дерево %s успешно восстановлено из базы (узлов: %d)', tree_id, tree.size)
         return tree
 
     async def delete(self, tree_id: UUID) -> None:
         """Удалить дерево по id"""
+        logger.info('DB: удаление дерева %s из базы', tree_id)
         stmt = (
             delete(TreeOrm)
             .where(TreeOrm.id == tree_id)
@@ -67,8 +75,10 @@ class SQLAlchemyTreeRepo:
         db_tree = (await self._session.execute(stmt)).scalar_one_or_none()
 
         if db_tree is None:
+            logger.info('DB: сохранение НОВОГО дерева %s', tree.tree_id)
             await self._save_new_tree(tree)
         else:
+            logger.info('DB: обновление существующего дерева %s', tree.tree_id)
             await self._update_tree(tree, db_tree)
 
     @staticmethod
@@ -100,6 +110,8 @@ class SQLAlchemyTreeRepo:
     async def _update_tree(self, tree: RedBlackTree, db_tree: TreeOrm) -> None:
         """Обновить существующее дерево"""
         # Словарь с orm моделями
+        logger.debug('DB: начало синхронизации узлов для дерева %s', tree.tree_id)
+
         tree_nodes_orm: dict[int, NodeOrm] = {
             node_orm.key: node_orm
             for node_orm in db_tree.nodes
@@ -146,6 +158,7 @@ class SQLAlchemyTreeRepo:
         keys_to_delete = set(tree_nodes_orm.keys()) - domain_keys
 
         if keys_to_delete:
+            logger.info('DB: удаление %d узлов из дерева %s', len(keys_to_delete), tree.tree_id)
             # Удалить узлы
             await self._session.execute(
                 delete(NodeOrm).where(
@@ -155,6 +168,7 @@ class SQLAlchemyTreeRepo:
             )
 
         await self._session.flush()
+        logger.debug('DB: синхронизация узлов для дерева %s завершена', tree.tree_id)
 
     async def _save_new_tree(self, tree: RedBlackTree) -> None:
         """Сохранить новое дерево"""

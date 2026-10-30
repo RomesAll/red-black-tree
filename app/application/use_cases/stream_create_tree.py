@@ -1,9 +1,12 @@
 import asyncio
+import logging
 from typing import Callable, Any, Sequence, Awaitable
 from uuid import UUID, uuid4
 from app.application.event_bus import EventRegistry
 from app.application.interfaces import IUnitOfWork
 from app.domain import RedBlackTree
+
+logger = logging.getLogger()
 
 
 class StreamCreateTreeUseCase:
@@ -20,6 +23,7 @@ class StreamCreateTreeUseCase:
             delay: float = 0.3,
     ) -> UUID:
         tree = RedBlackTree(tree_id=tree_id)
+        logger.info('StreamCreateTreeUseCase: старт стриминга для дерева %s. Узлов: %d', tree_id, len(raw_data))
 
         for key, value in raw_data:
             # Вставка одного узла
@@ -39,4 +43,5 @@ class StreamCreateTreeUseCase:
 
             await asyncio.sleep(delay)
 
+        logger.info('StreamCreateTreeUseCase: стриминг успешно завершен для дерева %s', tree_id)
         return tree_id
