@@ -49,7 +49,6 @@ class SQLAlchemyTreeRepo:
 
         return tree
 
-
     async def delete(self, tree_id: UUID) -> None:
         """Удалить дерево по id"""
         stmt = (
@@ -57,3 +56,29 @@ class SQLAlchemyTreeRepo:
             .where(TreeOrm.id == tree_id)
         )
         await self._session.execute(stmt)
+
+    @staticmethod
+    def _is_structure_changed(domain_node: Node, orm_node: NodeOrm) -> bool:
+        """
+        Проверяет, изменилась ли структура связей у узла.
+        Возвращает True, если нужно делать обновления связей
+        """
+        # Проверить левого потомка
+        domain_left_key = domain_node.left.key if domain_node.left else None
+        orm_left_key = orm_node.left.key if orm_node.left else None
+        if domain_left_key != orm_left_key:
+            return True
+
+        # Проверить правого потомка
+        domain_right_key = domain_node.right.key if domain_node.right else None
+        orm_right_key = orm_node.right.key if orm_node.right else None
+        if domain_right_key != orm_right_key:
+            return True
+
+        # Проверить родителя
+        domain_parent_key = domain_node.parent.key if domain_node.parent else None
+        orm_parent_key = orm_node.parent.key if orm_node.parent else None
+        if domain_parent_key != orm_parent_key:
+            return True
+
+        return False
