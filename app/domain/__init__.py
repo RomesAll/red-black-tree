@@ -1,6 +1,6 @@
 # Метаданные пакета
 __author__ = "RomesAll"
-__version__ = "0.1.0"
+__version__ = "1.0.0"
 
 # Модели
 from .models import Node, NodeColor, RedBlackTree
