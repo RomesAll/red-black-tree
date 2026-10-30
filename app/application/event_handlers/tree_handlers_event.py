@@ -16,11 +16,12 @@ class NodeInsertedEventHandler:
 
     async def handle(self, event: NodeInsertedEvent) -> None:
         payload = {
-            "type": "NODE_INSERTED",
-            "data": {
-                "key": event.key,
-                "value": event.value,
-                "color": event.color
+            'type': 'NODE_INSERTED',
+            'data': {
+                'tree_id': str(event.tree_id),
+                'key': event.key,
+                'value': event.value,
+                'color': event.color
             }
         }
         await self.ws_manager.send_to_tree(event.tree_id, payload)
@@ -34,9 +35,10 @@ class NodeDeletedEventHandler:
 
     async def handle(self, event: NodeDeletedEvent) -> None:
         payload = {
-            "type": "NODE_DELETED",
-            "data": {
-                "key": event.key
+            'type': 'NODE_DELETED',
+            'data': {
+                'tree_id': str(event.tree_id),
+                'key': event.key
             }
         }
         await self.ws_manager.send_to_tree(event.tree_id, payload)
@@ -50,10 +52,11 @@ class NodeColorChangedEventHandler:
 
     async def handle(self, event: NodeColorChangedEvent) -> None:
         payload = {
-            "type": "COLOR_CHANGED",
-            "data": {
-                "key": event.key,
-                "new_color": event.new_color
+            'type': 'COLOR_CHANGED',
+            'data': {
+                'tree_id': str(event.tree_id),
+                'key': event.key,
+                'new_color': event.new_color
             }
         }
         await self.ws_manager.send_to_tree(event.tree_id, payload)
@@ -67,8 +70,9 @@ class NodeLeftRotatedEventHandler:
 
     async def handle(self, event: NodeLeftRotatedEvent) -> None:
         payload = {
-            "type": "ROTATE_LEFT",
-            "data": {
+            'type': 'ROTATE_LEFT',
+            'data': {
+                'tree_id': str(event.tree_id),
                 'key': event.key,
                 'new_root_key': event.new_root_key,
                 'parent_key': event.parent_key
@@ -85,8 +89,9 @@ class NodeRightRotatedEventHandler:
 
     async def handle(self, event: NodeRightRotatedEvent) -> None:
         payload = {
-            "type": "ROTATE_RIGHT",
-            "data": {
+            'type': 'ROTATE_RIGHT',
+            'data': {
+                'tree_id': str(event.tree_id),
                 'key': event.key,
                 'new_root_key': event.new_root_key,
                 'parent_key': event.parent_key
