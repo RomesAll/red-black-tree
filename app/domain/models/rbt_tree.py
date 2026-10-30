@@ -1,5 +1,5 @@
 from collections import deque
-from typing import Any
+from typing import Any, Generator
 from uuid import UUID
 from app.domain import Node
 from app.domain.events import NodeLeftRotatedEvent, NodeInsertedEvent, NodeDeletedEvent, NodeColorChangedEvent, \
@@ -28,6 +28,19 @@ class RedBlackTree:
     def add_event(self, event: Any):
         """Добавить событие"""
         self._domain_events.append(event)
+
+    def iterative_dfs(self) -> Generator:
+        """Генератор итеративного обхода дерева в глубину."""
+        queue = deque([self.root])
+
+        while queue:
+            node = queue.pop()
+            yield node
+
+            if node and node.right:
+                queue.append(node.right)
+            if node and node.left:
+                queue.append(node.left)
 
     def _change_color(self, node: Node, new_color: NodeColor):
         """Метод смены цвета"""
