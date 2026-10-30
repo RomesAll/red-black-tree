@@ -40,7 +40,8 @@ async def websocket_tree_create_stream(
         # Запустить стриминг создания дерева
         await StreamCreateTreeUseCase(
             uow=SQLAlchemyUnitOfWork,
-            event_registry=event_bus
+            event_registry=event_bus,
+            ws_manager=manager
         ).execute(
             tree_id=tree_id,
             raw_data=raw_data,
