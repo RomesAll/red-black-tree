@@ -26,3 +26,6 @@ class Node:
         if not isinstance(other, Node):
             return NotImplemented
         return self.key == other.key
+
+    def __hash__(self) -> int:
+        return hash(self.key)

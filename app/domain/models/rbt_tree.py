@@ -1,10 +1,8 @@
 from collections import deque
 from typing import Any, Generator
 from uuid import UUID
-from app.domain import Node
-from app.domain.events import NodeLeftRotatedEvent, NodeInsertedEvent, NodeDeletedEvent, NodeColorChangedEvent, \
-    NodeRightRotatedEvent
-from app.domain.models.node import Node, NodeColor
+from .node import Node, NodeColor
+from app.domain.events import NodeLeftRotatedEvent, NodeInsertedEvent, NodeDeletedEvent, NodeColorChangedEvent, NodeRightRotatedEvent
 from app.domain.exceptions import DuplicateKeyError
 
 
@@ -338,22 +336,22 @@ class RedBlackTree:
         while queue_dfs:
             node, current_res_dict = queue_dfs.popleft()
 
-            if node.left:
+            if node and node.left:
                 child_left = {
-                    'key': self.node.key,
-                    'value': self.node.value,
-                    'color': self.node.color.value,
+                    'key': node.left.key,
+                    'value': node.left.value,
+                    'color': node.left.color.value,
                     'left': None,
                     'right': None
                 }
                 current_res_dict['left'] = child_left
                 queue_dfs.append((node.left, current_res_dict['left']))
 
-            if node.right:
+            if node and node.right:
                 child_right = {
-                    'key': self.node.key,
-                    'value': self.node.value,
-                    'color': self.node.color.value,
+                    'key': node.right.key,
+                    'value': node.right.value,
+                    'color': node.right.color.value,
                     'left': None,
                     'right': None
                 }
