@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Дерево {{ tree_id }}{% endblock %}
+
+{% block head %}
+<!-- Подключаем Vis.js для отрисовки графа -->
+<script type="text/javascript" src="/static/vis-network.min.js"></script>
+
+<style>
+    /* Стили для красивой плашки с ID */
+    .id-container {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        background: #e0f2fe;
+        padding: 5px 15px;
+        border-radius: 8px;
+        border: 1px solid #bae6fd;
+        vertical-align: middle;
+    }
+    .id-container a {
+        color: #0369a1;
+        text-decoration: none;
+        font-family: monospace;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+    .id-container a:hover { text-decoration: underline; }
+
+    .copy-btn {
+        background: #0ea5e9;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        padding: 5px 10px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        transition: background 0.2s;
+    }
+    .copy-btn:hover { background: #0284c7; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="header-info">
+    <h2 style="display: flex; justify-content: center; align-items: center; gap: 10px;">
+        Дерево:
+        <div class="id-container">
+            <!-- Ссылка на это же дерево (откроется в новой вкладке) -->
+            <a href="/view/{{ tree_id }}" target="_blank" title="Открыть в новой вкладке">{{ tree_id }}</a>
+            <!-- Кнопка копирования -->
+            <button class="copy-btn" onclick="copyUrl()">Копировать ссылку</button>
+        </div>
+    </h2>
+</div>
+
+<div class="controls">
+    <input type="number" id="node-key" placeholder="Ключ (число)">
+    <input type="text" id="node-value" placeholder="Значение">
+    <button id="add-node-btn" class="btn-add">Добавить</button>
+    <button id="delete-node-btn" class="btn-del">Удалить</button>
+    <div style="margin-left: 20px; display: flex; gap: 5px; border-left: 2px solid #ccc; padding-left: 20px;">
+        <input type="number" id="search-node-input" placeholder="Поиск узла..." style="width: 130px;">
+        <button id="search-node-btn" class="btn-primary">Найти</button>
+    </div>
+</div>
+
+<!-- Контейнер для графа -->
+<div id="network" class="graph-container"></div>
+
+<!-- Статус WebSocket -->
+<div id="ws-status" class="ws-status">WebSocket: Отключен</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Передаем tree_id из Python (Jinja2) в глобальную переменную JS
+    const treeId = "{{ tree_id }}";
+
+    // Функция копирования ПОЛНОЙ ССЫЛКИ в буфер обмена
+    function copyUrl() {
+        // Берем текущий origin (http://127.0.0.1:8000) и путь (/view/...)
+        // Игнорируем возможные GET-параметры (например, ?stream=true)
+        const fullUrl = window.location.origin + window.location.pathname;
+
+        navigator.clipboard.writeText(fullUrl).then(() => {
+            const btn = document.querySelector('.copy-btn');
+            const originalText = btn.innerText;
+
+            // Визуальный отклик
+            btn.innerText = "Скопировано!";
+            btn.style.background = "#10b981"; // Зеленый
+
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.background = "#0ea5e9"; // Возвращаем синий
+            }, 2000);
+        }).catch(err => {
+            alert("Ошибка копирования: " + err);
+        });
+    }
+</script>
+
+<!-- Подключаем основной скрипт для работы с графом и WebSocket -->
+<script src="/static/tree.js"></script>
+{% endblock %}
