@@ -19,8 +19,8 @@
 
 *   **Язык:** Python 3.12+
 *   **Фреймворк:** FastAPI
-*   **Работа с БД:** SQLAlchemy 2.0 (Async), Alembic (миграции)
-*   **Валидация:** Pydantic v2
+*   **Работа с БД:** SQLAlchemy
+*   **Валидация:** Pydantic
 *   **Менеджер пакетов:** Poetry
 *   **Фронтенд:** Vanilla JS, HTML, CSS, Vis.js
 *   **Тестирование:** Pytest, Pytest-asyncio
