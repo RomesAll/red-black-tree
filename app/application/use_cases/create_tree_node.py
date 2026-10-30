@@ -2,6 +2,7 @@ from typing import Callable, Any
 from uuid import UUID
 from app.application.event_bus import EventRegistry
 from app.application.interfaces import IUnitOfWork
+from app.domain import TreeNotFoundError
 
 
 class CreateNodeUseCase:
@@ -16,7 +17,7 @@ class CreateNodeUseCase:
             # Получение дерева из хранилища
             tree = await uow.tree_repo.get_by_id(tree_id)
             if not tree:
-                raise Exception()
+                raise TreeNotFoundError(tree_id)
 
             # Вставка нового узла
             tree.insert(key, value)

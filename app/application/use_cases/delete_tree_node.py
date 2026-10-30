@@ -2,6 +2,7 @@ from typing import Callable
 from uuid import UUID
 from app.application.event_bus import EventRegistry
 from app.application.interfaces import IUnitOfWork
+from app.domain import TreeNotFoundError
 
 
 class DeleteTreeNodeUseCase:
@@ -16,12 +17,14 @@ class DeleteTreeNodeUseCase:
             # Получить дерево по id
             tree = await uow.tree_repo.get_by_id(tree_id)
             if not tree:
-                raise Exception()
+                raise TreeNotFoundError(tree_id)
 
             # Удалить узел и получить доменные события
             tree.delete(key)
             events = tree.domain_event
             tree.clear_events()
+
+            await uow.tree_repo.save(tree)
 
         # Обработка доменных событий
         for event in events:
