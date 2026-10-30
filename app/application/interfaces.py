@@ -1,4 +1,5 @@
 from typing import Protocol, Any, Self
+from uuid import UUID
 from app.domain.repository_interfaces import ITreeRepository
 
 
@@ -12,7 +13,7 @@ class IEventHandler(Protocol):
 class IWSManager(Protocol):
     """Интерфейс-протокол для отправки данных по вебсокетам."""
 
-    async def send_to_tree(self, tree_id: Any, payload: dict) -> None:
+    async def send_to_tree(self, tree_id: UUID, payload: dict) -> None:
         pass
 
 
