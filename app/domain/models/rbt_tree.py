@@ -204,14 +204,20 @@ class RedBlackTree:
         node_to_delete = self.search(key)
         if node_to_delete is None:
             return
-        self.add_event(NodeDeletedEvent(tree_id=self.tree_id, key=key))
         self._delete_node(node_to_delete)
         self.size -= 1
 
+        self.add_event(
+            NodeDeletedEvent(
+                tree_id=self.tree_id,
+                key=key
+            )
+        )
+
     def _delete_node(self, z: Node):
+        """Удаление узла и подготовка к балансировке."""
         y = z
         y_original_color = y.color
-        x = None
 
         if z.left is None:
             x = z.right
@@ -235,8 +241,17 @@ class RedBlackTree:
             if y.left: y.left.parent = y
             self._change_color(y, z.color)
 
-        if y_original_color == NodeColor.BLACK and x is not None:
-            self._fix_delete(x)
+        if y_original_color == NodeColor.BLACK:
+            if x is not None:
+                parent = x.parent
+            else:
+                if y.parent is not None and y != z:
+                    parent = y.parent
+                elif z.parent is not None:
+                    parent = z.parent
+                else:
+                    parent = None
+            self._fix_delete(x, parent)
 
     def _rb_transplant(self, u: Node, v: Node | None):
         """Заменяет поддерево u на поддерево v."""
@@ -255,69 +270,84 @@ class RedBlackTree:
             node = node.left
         return node
 
-    def _fix_delete(self, x: Node):
-        """Полная корректная и безопасная нерекурсивная балансировка удаления"""
-        while x != self.root and x.color == NodeColor.BLACK:
-            if x.parent and x == x.parent.left:
-                w = x.parent.right
+    def _fix_delete(self, x: Node | None, parent: Node | None):
+        """
+        Балансировка после удаления.
+        """
+        while x != self.root and (x is None or x.color == NodeColor.BLACK):
+            if not parent:
+                break
+
+            if x == parent.left:
+                w = parent.right
+                # Сценарий 1 - Брат красный
                 if w and w.color == NodeColor.RED:
                     self._change_color(w, NodeColor.BLACK)
-                    self._change_color(x.parent, NodeColor.RED)
-                    self._left_rotate(x.parent)
-                    w = x.parent.right
+                    self._change_color(parent, NodeColor.RED)
+                    self._left_rotate(parent)
+                    w = parent.right
 
                 if not w:
-                    x = x.parent
+                    x = parent
+                    parent = x.parent
+                # Сценарий 2 - Брат черный, оба ребенка черные
                 elif (not w.left or w.left.color == NodeColor.BLACK) and \
                         (not w.right or w.right.color == NodeColor.BLACK):
                     self._change_color(w, NodeColor.RED)
-                    x = x.parent
+                    x = parent
+                    parent = x.parent
                 else:
+                    # Сценарий 3 - Брат черный, левый красный, правый черный
                     if not w.right or w.right.color == NodeColor.BLACK:
                         if w.left:
                             self._change_color(w.left, NodeColor.BLACK)
                         self._change_color(w, NodeColor.RED)
                         self._right_rotate(w)
-                        w = x.parent.right
+                        w = parent.right
 
-                    if w and x.parent:
-                        self._change_color(w, x.parent.color)
-                        self._change_color(x.parent, NodeColor.BLACK)
+                    # Сценарий 4 - Брат черный, правый красный
+                    if w:
+                        self._change_color(w, parent.color)
+                        self._change_color(parent, NodeColor.BLACK)
                         if w.right:
                             self._change_color(w.right, NodeColor.BLACK)
-                        self._left_rotate(x.parent)
+                        self._left_rotate(parent)
                     x = self.root
+                    parent = None
             else:
-                if x.parent:
-                    w = x.parent.left
-                    if w and w.color == NodeColor.RED:
-                        self._change_color(w, NodeColor.BLACK)
-                        self._change_color(x.parent, NodeColor.RED)
-                        self._right_rotate(x.parent)
-                        w = x.parent.left
+                w = parent.left
+                if w and w.color == NodeColor.RED:
+                    self._change_color(w, NodeColor.BLACK)
+                    self._change_color(parent, NodeColor.RED)
+                    self._right_rotate(parent)
+                    w = parent.left
 
-                    if not w:
-                        x = x.parent
-                    elif (not w.left or w.left.color == NodeColor.BLACK) and \
-                            (not w.right or w.right.color == NodeColor.BLACK):
+                if not w:
+                    x = parent
+                    parent = x.parent
+                elif (not w.left or w.left.color == NodeColor.BLACK) and \
+                        (not w.right or w.right.color == NodeColor.BLACK):
+                    self._change_color(w, NodeColor.RED)
+                    x = parent
+                    parent = x.parent
+                else:
+                    if not w.left or w.left.color == NodeColor.BLACK:
+                        if w.right:
+                            self._change_color(w.right, NodeColor.BLACK)
                         self._change_color(w, NodeColor.RED)
-                        x = x.parent
-                    else:
-                        if not w.left or w.left.color == NodeColor.BLACK:
-                            if w.right:
-                                self._change_color(w.right, NodeColor.BLACK)
-                            self._change_color(w, NodeColor.RED)
-                            self._left_rotate(w)
-                            w = x.parent.left
+                        self._left_rotate(w)
+                        w = parent.left
+                    if w:
+                        self._change_color(w, parent.color)
+                        self._change_color(parent, NodeColor.BLACK)
+                        if w.left:
+                            self._change_color(w.left, NodeColor.BLACK)
+                        self._right_rotate(parent)
+                    x = self.root
+                    parent = None
 
-                        if w and x.parent:
-                            self._change_color(w, x.parent.color)
-                            self._change_color(x.parent, NodeColor.BLACK)
-                            if w.left:
-                                self._change_color(w.left, NodeColor.BLACK)
-                            self._right_rotate(x.parent)
-                        x = self.root
-        self._change_color(x, NodeColor.BLACK)
+        if x is not None:
+            self._change_color(x, NodeColor.BLACK)
 
     def to_dict(self) -> dict | None:
         """Преобразовать агрегат в python словарь для передачи."""
